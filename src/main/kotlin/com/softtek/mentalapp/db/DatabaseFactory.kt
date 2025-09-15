@@ -5,6 +5,8 @@ import com.mongodb.MongoClientSettings
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoDatabase
+import org.bson.codecs.configuration.CodecRegistries
+import org.bson.codecs.pojo.PojoCodecProvider
 
 object DatabaseFactory {
     private lateinit var client: MongoClient
@@ -13,8 +15,15 @@ object DatabaseFactory {
     fun init() {
         val connectionString =
             ConnectionString("mongodb://root:rootpassword@localhost:27017/mentalapp?authSource=admin")
+
+        val pojoCodecRegistry = CodecRegistries.fromRegistries(
+            MongoClientSettings.getDefaultCodecRegistry(),
+            CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build())
+        )
+
         val settings = MongoClientSettings.builder()
             .applyConnectionString(connectionString)
+            .codecRegistry(pojoCodecRegistry)
             .build()
 
         client = MongoClients.create(settings)
@@ -22,5 +31,3 @@ object DatabaseFactory {
         println("MongoDB conectado com sucesso!")
     }
 }
-
-
