@@ -36,6 +36,10 @@ class UserRepository {
         return result.deletedCount > 0
     }
 
+    fun update(user: User) {
+        col.replaceOne(eq("_id", user.id), user)
+    }
+
     fun listAll(): List<UserPublicResponse> =
         col.find().map { it.toPublic() }.toList()
 

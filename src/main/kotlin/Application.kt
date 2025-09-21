@@ -5,7 +5,7 @@ import br.com.configureSerialization
 import com.softtek.mentalapp.db.DatabaseFactory
 import com.softtek.mentalapp.db.Seed
 import com.softtek.mentalapp.routes.authRoutes
-import com.softtek.mentalapp.routes.userRoutes
+import br.com.com.softtek.mentalapp.routes.userRoutes
 import io.ktor.server.routing.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -25,6 +25,5 @@ fun Application.module() {
         )) }
     }
 
-    // cria seed admin (dev)
     Seed.createAdminIfNotExists()
 }

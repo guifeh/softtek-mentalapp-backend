@@ -1,8 +1,12 @@
 package br.com.com.softtek.mentalapp.services
 
+import br.com.com.softtek.mentalapp.models.User
 import br.com.com.softtek.mentalapp.models.UserCreateRequest
 import br.com.com.softtek.mentalapp.models.UserPublicResponse
 import br.com.com.softtek.mentalapp.models.toPublic
+import br.com.com.softtek.mentalapp.auth.JwtConfig
+import br.com.com.softtek.mentalapp.models.UserUpdateRequest
+import com.mongodb.client.model.Filters.eq
 import com.softtek.mentalapp.repositories.UserRepository
 import org.mindrot.jbcrypt.BCrypt
 
@@ -27,9 +31,10 @@ class UserService(private val repo: UserRepository = UserRepository()) {
     }
 
     fun authenticate(email: String, password: String): UserPublicResponse? {
-        val user = repo.findByEmail(email.lowercase()) ?: return null
-        return if (BCrypt.checkpw(password, user.passwordHash)) {
-            user.toPublic()
+        val doc = repo.findByEmail(email.lowercase()) ?: return null
+        val hash = doc.passwordHash
+        return if (BCrypt.checkpw(password, hash)) {
+            doc.toPublic()
         } else null
     }
 
@@ -40,6 +45,18 @@ class UserService(private val repo: UserRepository = UserRepository()) {
 
     fun delete(id: String): Boolean {
         return repo.delete(id)
+    }
+
+    fun updateUser(id: String, req: UserUpdateRequest): UserPublicResponse? {
+        val existing = repo.findById(id) ?: return null
+
+        val updatedUser = existing.copy(
+            name = req.name ?: existing.name,
+            email = req.email ?: existing.email,
+            role = req.role ?: existing.role
+        )
+        repo.update(updatedUser)
+        return updatedUser.toPublic()
     }
 
     fun listAll(): List<UserPublicResponse> = repo.listAll()

@@ -1,48 +1,75 @@
-package com.softtek.mentalapp.routes
+package br.com.com.softtek.mentalapp.routes
 
+import br.com.com.softtek.mentalapp.models.*
 import br.com.com.softtek.mentalapp.services.UserService
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
+import br.com.com.softtek.mentalapp.auth.JwtConfig
 import io.ktor.server.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.response.*
+import io.ktor.server.request.*
+import io.ktor.server.auth.*
+import io.ktor.http.*
+import io.ktor.server.auth.jwt.JWTPrincipal
+import br.com.com.softtek.mentalapp.models.*
 
-fun Route.userRoutes(service: UserService = UserService()) {
+fun Route.userRoutes(userService: UserService = UserService()) {
 
-    route("/usuarios") {
-        get {
-            call.respond(service.listAll())
-        }
+    route("/api/v1/users") {
 
-        get("/{id}") {
-            val id = call.parameters["id"] ?: return@get call.respondText(
-                "ID obrigatório",
-                status = io.ktor.http.HttpStatusCode.BadRequest
-            )
-            val user = service.getById(id)
-            if (user != null) {
+        authenticate("auth-jwt") {
+
+            get("/me") {
+                val principal = call.principal<JWTPrincipal>()
+                val uid = principal!!.payload.getClaim("uid").asString()
+                val user = userService.getById(uid)
+                    ?: return@get call.respond(HttpStatusCode.NotFound, mapOf("error" to "Usuário não encontrado"))
+
                 call.respond(user)
-            } else {
-                call.respondText("Usuário não encontrado", status = io.ktor.http.HttpStatusCode.NotFound)
             }
-        }
 
-        post {
-            val req = call.receive<br.com.com.softtek.mentalapp.models.UserCreateRequest>()
-            val created = service.register(req)
-            call.respond(created)
-        }
+            get {
+                val principal = call.principal<JWTPrincipal>()
+                val role = principal!!.payload.getClaim("role").asString()
+                if (role != "ADMIN") {
+                    return@get call.respond(HttpStatusCode.Forbidden, mapOf("error" to "Acesso negado"))
+                }
 
-        delete("/{id}") {
-            val id = call.parameters["id"]
-                ?: return@delete call.respondText("Id não informado", status = io.ktor.http.HttpStatusCode.BadRequest)
+                val users = userService.listAll().map { it }
+                call.respond(users)
+            }
 
-            val user = service.getById(id)
-            if (user != null) {
-                service.delete(id)
-                call.respondText("Usuário deletado com sucesso")
-            } else {
-                call.respondText("Usuário não encontrado", status = io.ktor.http.HttpStatusCode.NotFound)
+            put("/{id}") {
+                val id = call.parameters["id"]
+                    ?: return@put call.respond(HttpStatusCode.BadRequest, "Id não informado")
+
+                val req = call.receive<UserUpdateRequest>()
+
+                val updated = userService.updateUser(id, req)
+                    ?: return@put call.respond(HttpStatusCode.NotFound, "Usuário não encontrado")
+
+                call.respond(updated)
+            }
+
+            delete("/{id}") {
+                val idParam = call.parameters["id"] ?: return@delete call.respondText(
+                    "Id não informado",
+                    status = HttpStatusCode.BadRequest
+                )
+
+                val principal = call.principal<JWTPrincipal>()
+                val role = principal!!.payload.getClaim("role").asString()
+                if (role != "ADMIN") {
+                    return@delete call.respond(HttpStatusCode.Forbidden, mapOf("error" to "Acesso negado"))
+                }
+
+                val deleted = userService.delete(idParam)
+                if (deleted) {
+                    call.respondText("Usuário deletado com sucesso")
+                } else {
+                    call.respondText("Usuário não encontrado", status = HttpStatusCode.NotFound)
+                }
             }
         }
     }
 }
+

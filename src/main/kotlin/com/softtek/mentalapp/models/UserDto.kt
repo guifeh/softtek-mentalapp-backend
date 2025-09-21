@@ -19,6 +19,13 @@ data class UserPublicResponse(
 )
 
 @Serializable
+data class UserUpdateRequest(
+    val name: String? = null,
+    val email: String? = null,
+    val role: String? = null
+)
+
+@Serializable
 data class LoginRequest(
     val email: String,
     val password: String
@@ -27,7 +34,7 @@ data class LoginRequest(
 @Serializable
 data class LoginResponse(
     val accessToken: String,
-    val tokenType: String = "Bearer",
+    val refreshToken: String,
     val user: UserPublicResponse
 )
 
