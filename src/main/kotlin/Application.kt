@@ -20,7 +20,8 @@ fun Application.module() {
 
     JwtConfig.configureKtorAuth(this)
 
-    val checkinRepository = CheckinRepository()
+    val database: MongoDatabase = DatabaseFactory.database
+    val checkinRepository = CheckinRepository(database)
     val checkinService = CheckinService(checkinRepository)
 
     routing {

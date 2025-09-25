@@ -27,3 +27,22 @@ data class CheckinResponse(
     val note: String?,
     val createdAt: Long
 )
+
+@Serializable
+data class CheckinSummaryResponse(
+    val emotion: String,
+    val count: Long,
+    val percentage: Double
+)
+
+@Serializable
+data class CheckinSummaryResult(
+    val total: Long,
+    val summary: List<CheckinSummaryResponse>
+)
+
+@Serializable
+data class CheckinSummary(
+    val totalCheckins: Int,
+    val uniqueUsers: Int
+)
