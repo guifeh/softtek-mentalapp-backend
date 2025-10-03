@@ -13,7 +13,6 @@ import org.mindrot.jbcrypt.BCrypt
 class UserService(private val repo: UserRepository = UserRepository()) {
 
     fun register(req: UserCreateRequest): UserPublicResponse {
-        // validações
         if (!req.email.contains("@") || req.password.length < 6) {
             throw IllegalArgumentException("Email inválido ou senha muito curta (mín 6).")
         }

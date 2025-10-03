@@ -16,6 +16,21 @@ fun Route.userRoutes(userService: UserService = UserService()) {
 
     route("/api/v1/users") {
 
+        post("/register"){
+            try {
+                val req = call.receive<UserCreateRequest>()
+                val user = userService.register(req)
+                call.respond(HttpStatusCode.Created, user)
+            }catch (e: IllegalArgumentException){
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to e.message))
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.InternalServerError,
+                    mapOf("error" to "Erro inesperado: ${e.message}")
+                )
+            }
+        }
+
         authenticate("auth-jwt") {
 
             get("/me") {

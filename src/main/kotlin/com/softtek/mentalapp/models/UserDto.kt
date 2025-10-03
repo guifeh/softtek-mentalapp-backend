@@ -10,6 +10,14 @@ data class UserCreateRequest(
 )
 
 @Serializable
+data class UserResponse(
+    val id: String,
+    val name: String,
+    val email: String,
+    val role: String = "USER"
+)
+
+@Serializable
 data class UserPublicResponse(
     val id: String,
     val email: String,
